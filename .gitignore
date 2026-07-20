@@ -1,0 +1,21 @@
+# OS Metadata
+Thumbs.db
+EHthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# XAMPP / Local server files (if any get copied)
+cgi-bin/
+apache/
+mysql/
+tmp/
