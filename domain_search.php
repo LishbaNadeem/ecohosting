@@ -4,13 +4,13 @@ include('config.php');
 $searchQuery = isset($_GET['domain']) ? trim($_GET['domain']) : '';
 $domainClean = strtolower($searchQuery);
 
-// Remove spaces
+// Remove spaces and invalid characters
 $domainClean = preg_replace('/\s+/', '', $domainClean);
 
 $resultAvailable = false;
-$suggestedDomain = '';
 $price = 0.00;
 $tld = '';
+$errorMsg = '';
 
 if (!empty($domainClean)) {
     // If no dot is present, append .com
@@ -18,56 +18,49 @@ if (!empty($domainClean)) {
         $domainClean .= '.com';
     }
 
-    // Extract TLD
-    $parts = explode('.', $domainClean);
-    $tld = '.' . end($parts);
-    
-    // Check if contains taken keywords
-    $prefix = $parts[0];
-    $isTaken = false;
-    
-    $takenKeywords = ['google', 'facebook', 'apple', 'microsoft', 'yahoo', 'amazon', 'netflix', 'github', 'youtube'];
-    foreach ($takenKeywords as $keyword) {
-        if (strpos($prefix, $keyword) !== false) {
-            $isTaken = true;
-            break;
-        }
-    }
-    
-    // Prefix too short is usually taken
-    if (strlen($prefix) < 4) {
-        $isTaken = true;
-    }
-    
-    // Realistic Simulation: deterministically mark ~30% of normal queries as taken
-    // This way, 'mytestblog123.com' will always return the same availability status
-    if (!$isTaken) {
-        $hash = md5($domainClean);
-        $firstChar = substr($hash, 0, 1);
-        if (in_array($firstChar, ['0', '1', '2', '3', '4'])) {
-            $isTaken = true; // 5/16 = ~31% chance to be taken
-        }
-    }
-    
-    if (!$isTaken) {
-        $resultAvailable = true;
-        // Determine pricing
-        switch ($tld) {
-            case '.com':
-                $price = 15.99;
-                break;
-            case '.net':
-                $price = 10.99;
-                break;
-            case '.org':
-                $price = 12.99;
-                break;
-            case '.me':
-                $price = 8.99;
-                break;
-            default:
-                $price = 14.99;
-                break;
+    // Validate domain format
+    if (!preg_match('/^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/', $domainClean)) {
+        $errorMsg = "Please enter a valid domain name (e.g. mywebsite.com)";
+    } else {
+        // Extract parts
+        $parts = explode('.', $domainClean);
+        $tld = '.' . end($parts);
+        $prefix = $parts[0];
+
+        // ✅ REAL DNS CHECK - Check if domain has actual DNS records on the internet
+        // checkdnsrr() returns TRUE if the domain has DNS records (meaning it is registered/taken)
+        // It returns FALSE if no DNS records found (meaning it may be available)
+        $isTaken = checkdnsrr($domainClean, 'ANY');
+
+        if (!$isTaken) {
+            $resultAvailable = true;
+            // Determine pricing based on TLD
+            switch ($tld) {
+                case '.com':
+                    $price = 15.99;
+                    break;
+                case '.net':
+                    $price = 10.99;
+                    break;
+                case '.org':
+                    $price = 12.99;
+                    break;
+                case '.me':
+                    $price = 8.99;
+                    break;
+                case '.io':
+                    $price = 39.99;
+                    break;
+                case '.pk':
+                    $price = 5.99;
+                    break;
+                case '.co':
+                    $price = 19.99;
+                    break;
+                default:
+                    $price = 14.99;
+                    break;
+            }
         }
     }
 }
@@ -99,7 +92,7 @@ if (!empty($domainClean)) {
                         <div class="card p-4 shadow-sm" style="border-radius: 12px; border: none; background: #fbf9ff;">
                             <form action="domain_search.php" method="GET" class="d-flex align-items-center">
                                 <input type="text" name="domain" class="form-control mr-3" value="<?php echo htmlspecialchars($searchQuery); ?>" placeholder="Search for another domain (e.g. website.com)" required style="height: 55px; border-radius: 8px; font-size: 16px;">
-                                <button type="submit" class="btn text-white" style="background: #ff5e13; border: none; height: 55px; line-height: 55px; padding: 0 35px; font-weight: bold; border-radius: 8px;">Search</button>
+                                <button type="submit" class="btn text-white" style="background: #ff5e13; border: none; height: 55px; padding: 0 35px; font-weight: bold; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; line-height: 1; font-size: 16px; margin: 0; flex-shrink: 0; box-shadow: none;">Search</button>
                             </form>
                         </div>
                     </div>
@@ -110,7 +103,13 @@ if (!empty($domainClean)) {
                     <div class="row justify-content-center">
                         <div class="col-lg-10">
                             <div class="card p-5 text-center shadow" style="border-radius: 12px; border: none;">
-                                <?php if ($resultAvailable): ?>
+                                <?php if (!empty($errorMsg)): ?>
+                                    <div class="mb-4">
+                                        <i class="fas fa-exclamation-triangle text-warning" style="font-size: 80px;"></i>
+                                    </div>
+                                    <h2 class="mb-2" style="font-weight: 700; color: #2c234d;"><?php echo htmlspecialchars($errorMsg); ?></h2>
+                                    <p class="text-muted">Please try again with a valid domain format like <code>mywebsite.com</code></p>
+                                <?php elseif ($resultAvailable): ?>
                                     <div class="mb-4">
                                         <i class="fas fa-check-circle text-success" style="font-size: 80px;"></i>
                                     </div>
