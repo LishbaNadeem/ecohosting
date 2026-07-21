@@ -34,7 +34,11 @@ CREATE TABLE IF NOT EXISTS `orders` (
     `user_id` INT NOT NULL,
     `package_id` INT NOT NULL,
     `domain_name` VARCHAR(255) NOT NULL,
-    `status` VARCHAR(50) DEFAULT 'Pending',
+    `transaction_id` VARCHAR(255) DEFAULT NULL,
+    `payment_method` VARCHAR(50) DEFAULT 'Card',
+    `payment_status` VARCHAR(50) DEFAULT 'Paid',
+    `amount_paid` DECIMAL(10,2) DEFAULT 0.00,
+    `status` VARCHAR(50) DEFAULT 'Active',
     `order_date` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
     FOREIGN KEY (`package_id`) REFERENCES `packages`(`id`) ON DELETE CASCADE

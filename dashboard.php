@@ -19,7 +19,7 @@ try {
     $conn = getDBConnection();
     $db_active = true;
     
-    $stmt = $conn->prepare("SELECT o.id, o.domain_name, o.status, o.order_date, p.name as package_name, p.price 
+    $stmt = $conn->prepare("SELECT o.id, o.domain_name, o.status, o.order_date, o.transaction_id, o.payment_method, o.payment_status, o.amount_paid, p.name as package_name, p.price 
                             FROM orders o 
                             JOIN packages p ON o.package_id = p.id 
                             WHERE o.user_id = ? 
@@ -75,7 +75,7 @@ if (!$db_active && isset($_SESSION['mock_orders'])) {
                             <hr>
                             <div class="text-left mt-3">
                                 <p class="mb-2"><strong>Member Since:</strong> <?php echo date('F Y'); ?></p>
-                                <p class="mb-2"><strong>Status:</strong> <span class="badge badge-success">Active</span></p>
+                                <p class="mb-2"><strong>Account Status:</strong> <span class="badge badge-success">Verified</span></p>
                                 <?php if (!$db_active): ?>
                                     <p class="mb-0 text-warning"><i class="fas fa-exclamation-triangle"></i> Running in Offline Sandbox</p>
                                 <?php endif; ?>
@@ -89,7 +89,7 @@ if (!$db_active && isset($_SESSION['mock_orders'])) {
                     <!-- Orders/Services List -->
                     <div class="col-lg-8">
                         <div class="card shadow p-4" style="border-radius: 12px; border: none; background: #fff;">
-                            <h3 class="mb-4" style="color: #2c234d; font-weight: 700;">My Active Subscriptions</h3>
+                            <h3 class="mb-4" style="color: #2c234d; font-weight: 700;">My Subscriptions & Transactions</h3>
                             
                             <?php
                             if (isset($_SESSION['success'])) {
@@ -107,26 +107,35 @@ if (!$db_active && isset($_SESSION['mock_orders'])) {
                                 </div>
                             <?php else: ?>
                                 <div class="table-responsive">
-                                    <table class="table table-hover border">
+                                    <table class="table table-hover border align-middle">
                                         <thead class="thead-light">
                                             <tr>
-                                                <th>Subscription ID</th>
-                                                <th>Plan Type</th>
+                                                <th>Subscription</th>
                                                 <th>Domain</th>
-                                                <th>Cost</th>
-                                                <th>Purchase Date</th>
+                                                <th>Txn / Ref ID</th>
+                                                <th>Payment Method</th>
+                                                <th>Amount</th>
                                                 <th>Status</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <?php foreach ($orders as $order): ?>
                                                 <tr>
-                                                    <td><strong>#<?php echo htmlspecialchars($order['id']); ?></strong></td>
-                                                    <td><?php echo htmlspecialchars($order['package_name']); ?></td>
+                                                    <td>
+                                                        <strong><?php echo htmlspecialchars($order['package_name']); ?></strong><br>
+                                                        <small class="text-muted"><?php echo date('M d, Y', strtotime($order['order_date'])); ?></small>
+                                                    </td>
                                                     <td><code><?php echo htmlspecialchars($order['domain_name']); ?></code></td>
-                                                    <td>$<?php echo htmlspecialchars(number_format($order['price'], 2)); ?>/mo</td>
-                                                    <td><?php echo date('M d, Y', strtotime($order['order_date'])); ?></td>
-                                                    <td><span class="badge badge-success" style="padding: 6px 12px; border-radius: 4px;"><?php echo htmlspecialchars($order['status']); ?></span></td>
+                                                    <td>
+                                                        <small class="text-primary font-weight-bold"><?php echo isset($order['transaction_id']) && !empty($order['transaction_id']) ? htmlspecialchars($order['transaction_id']) : 'N/A'; ?></small>
+                                                    </td>
+                                                    <td>
+                                                        <small class="text-dark"><?php echo isset($order['payment_method']) ? htmlspecialchars($order['payment_method']) : 'Card'; ?></small>
+                                                    </td>
+                                                    <td><strong>$<?php echo htmlspecialchars(number_format(isset($order['amount_paid']) && $order['amount_paid'] > 0 ? $order['amount_paid'] : $order['price'], 2)); ?></strong></td>
+                                                    <td>
+                                                        <span class="badge badge-success" style="padding: 6px 12px; border-radius: 4px;"><?php echo htmlspecialchars(isset($order['payment_status']) ? $order['payment_status'] : $order['status']); ?></span>
+                                                    </td>
                                                 </tr>
                                             <?php endforeach; ?>
                                         </tbody>

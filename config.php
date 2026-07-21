@@ -19,6 +19,14 @@ if ($_SERVER['HTTP_HOST'] == 'localhost' || $_SERVER['HTTP_HOST'] == '127.0.0.1'
     define('DB_NAME', 'if0_42455722_ecohosting_db');
 }
 
+// Stripe Payment Gateway Configuration (Test Mode Keys)
+define('STRIPE_PUBLISHABLE_KEY', 'pk_test_51NxSAMPLEKEY1234567890abcdefghijklmnopqrstuvwxyz');
+define('STRIPE_SECRET_KEY', 'sk_test_51NxSAMPLEKEY1234567890abcdefghijklmnopqrstuvwxyz');
+define('BANK_ACCOUNT_TITLE', 'EcoHosting Private Limited');
+define('BANK_ACCOUNT_IBAN', 'PK36MEZN0001000123456789');
+define('BANK_NAME', 'Meezan Bank Limited');
+define('JAZZCASH_EASYPAISA_NO', '0300-1234567');
+
 // Database connection helper
 function getDBConnection() {
     $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
